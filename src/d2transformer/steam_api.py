@@ -132,8 +132,8 @@ class SteamAPI:
 # ────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     dota = SteamAPI()
-    dota.request_matches(100, 22)  # ranked AP queue
+    dota.request_matches(5000, 22)  # ranked AP queue
     print(f"Number of matches requested: {len(dota.json_response)}")
     dota.convert_to_dataframe()
-    dota.save_to_parquet(r"C:\Users\gkerr\code\D2Transformer\data\dota_matches.parquet")
+    dota.save_to_parquet(r"C:\Users\gkerr\code\D2Transformer\data\dota_matches2.parquet")
     print(dota.df.head())
