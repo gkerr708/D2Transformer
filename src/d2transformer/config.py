@@ -12,7 +12,7 @@ KEY = None
 # Define constants for shared configurations
 # Smart thing to write the same thing twice.
 PROJECT_DIR = Path(__file__).parent.parent.parent
-MATCH_DATA_PATH = PROJECT_DIR / "data" / f"dota_matches2.parquet"
+MATCH_DATA_PATH = PROJECT_DIR / "data" / f"dota_matches4.parquet"
 MODEL_PATH = PROJECT_DIR / "src" / "d2draftnet" / "models" / f"{current_patch_for_model}_model.pth"
 
 # Define the list of heroes
