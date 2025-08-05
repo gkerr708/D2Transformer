@@ -20,6 +20,12 @@ class SteamAPI:
                 self.API_KEY: str = file.read().strip()
         else:
             raise FileNotFoundError(f"API key file not found at {api_key_path}")
+        open_dota_key_path = Path(r"C:\Users\gkerr\code\opendota_api_key.txt")
+        if open_dota_key_path.exists():
+            with open(open_dota_key_path, "r") as file:
+                self.OPEN_DOTA_API_KEY: str = file.read().strip()
+        else:
+            raise FileNotFoundError(f"OpenDota API key file not found at {open_dota_key_path}")
 
         self.match_url = "https://api.steampowered.com/IDOTA2Match_570/GetMatchHistory/v1/"
         self.hero_url = "https://api.steampowered.com/IEconDOTA2_570/GetHeroes/v1/"
@@ -31,8 +37,9 @@ class SteamAPI:
 
     def get_winner(self, match_id: int) -> int:
         url = OPENDOTA_URL.format(match_id)
+        params = {"api_key": self.OPEN_DOTA_API_KEY}
         for attempt in range(3):
-            r = requests.get(url, timeout=6)
+            r = requests.get(url, params=params, timeout=6)
             if r.status_code == 200:
                 js = r.json()
                 return 0 if js["radiant_win"] else 1
@@ -71,6 +78,14 @@ class SteamAPI:
         self.json_response = all_matches
         return all_matches
 
+    def fetch_radiant_win_labels(self):
+        for i, match in enumerate(self.json_response):
+            try:
+                match["radiant_wins"] = self.get_winner(match["match_id"])
+            except Exception as e:
+                print(f"  ↳ match {match['match_id']} skipped (winner fetch failed: {e})")
+                match["radiant_wins"] = None
+
     def convert_to_dataframe(self) -> pd.DataFrame:
         if not self.json_response:
             return pd.DataFrame()
@@ -96,10 +111,7 @@ class SteamAPI:
                 pd.to_datetime(ts, unit="s", utc=True).tz_convert("America/Halifax")
             )
 
-            try:
-                match["radiant_wins"] = self.get_winner(match["match_id"])
-            except Exception as e:
-                print(f"  ↳ skipped (winner fetch failed: {e})")
+            if match.get("radiant_wins") is None:
                 continue
 
             valid_matches.append(match)
@@ -143,8 +155,9 @@ class SteamAPI:
 # ────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     dota = SteamAPI()
-    dota.request_matches(10000, 22)  # ranked AP queue
+    dota.request_matches(100, 22)  # ranked AP queue
     print(f"Number of matches fetched: {len(dota.json_response)}")
+    dota.fetch_radiant_win_labels()
     dota.convert_to_dataframe()
     save_path = Path(r"C:\Users\gkerr\code\D2Transformer\data\dota_matches4.parquet")
     dota.save_to_parquet(save_path)
